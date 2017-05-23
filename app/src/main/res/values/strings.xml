@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NewBearWeibo</string>
+    <string name="token_to_string_format_1">Token：%1$s \n有效期：%2$s</string>
+    <string name="token_has_existed">Token 仍在有效期内，无需再次登录。</string>
+    <string name="firstpager">首页</string>
+    <string name="me">我</string>
+    <string name="message">消息</string>
+    <string name="setting">设置</string>
+    <string name="username">用户名</string>
+    <string name="destruction">简介:</string>
+    <string name="weibo">微博</string>
+    <string name="attention">关注</string>
+    <string name="fans">粉丝</string>
+    <string name="address">所在地:</string>
+    <string name="blog">博客:</string>
+    <string name="realmName">个性化域名：</string>
+    <string name="login">登录</string>
+    <string name="logout">注销</string>
+    <string name="tokenMessage">Token 信息：</string>
+    <string name="weibosdk_demo_token_to_string_format_1">Token：%1$s \n有效期：%2$s</string>
+    <string name="weibosdk_demo_token_has_existed">Token 仍在有效期内，无需再次登录。</string>
+    <string name="transmit">转发</string>
+    <string name="comments">评论</string>
+    <string name="good">赞</string>
+    <string name="back">返回</string>
+    <string name="all_weibo">所有微博</string>
+    <string name="reply">回复</string>
+    <string name="send">发送</string>
+    <string name="publish">发微博</string>
+    <string name="share">分享新鲜事...</string>
+    <string name="loading">加载中-----</string>
+    <string name="referesh">下拉刷新</string>
+    <string name="lasttime">最后刷新时间：2015-09-13 21：40：34</string>
+    <string name="load">上拉加载</string>
+    <string name="withcomment">同时评论</string>
+    <string name="withtransmit">同时转发</string>
+</resources>
