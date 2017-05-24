@@ -191,12 +191,12 @@ public class ReviewImagesActivity extends Activity implements OnTouchListener {
         int bWidth = bitmap.getWidth();//图像宽
         int bHeight = bitmap.getHeight();//图像高
 
-        float scalX = screenWidth / (float) bitmap.getWidth();
-        float scalY = screenHeight / (float) bitmap.getHeight();
-        float scal = Math.min(scalX, scalY);
+        float scaleX = screenWidth / (float) bitmap.getWidth();
+        float scaleY = screenHeight / (float) bitmap.getHeight();
+        float scale = Math.min(scaleX, scaleY);
         Matrix m = new Matrix();
-        m.postScale(scal, scal);
-        m.postTranslate((screenWidth - bWidth * scal) / 2, (screenHeight - bHeight * scal) / 2);
+        m.postScale(scale, scale);
+        m.postTranslate((screenWidth - bWidth * scale) / 2, (screenHeight - bHeight * scale) / 2);
 
         imageView.setImageMatrix(m);
     }

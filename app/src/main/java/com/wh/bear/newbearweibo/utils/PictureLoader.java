@@ -6,6 +6,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.view.View;
 import android.widget.ImageView;
 
 import com.wh.bear.newbearweibo.R;
@@ -36,6 +37,14 @@ public class PictureLoader {
     private static PictureLoader loader;
     private static HashMap<String, SoftReference<Bitmap>> mImageCaches;
 
+    public interface PictureLoaderListener{
+        void onLoadingStarted(String imageUri, View view);
+
+        void onLoadingFailed(String imageUri, View view, String failReason);
+
+        void onLoadingComplete(String imageUri, View view, Bitmap loadedImage);
+    }
+
     private PictureLoader() {
         if (DEBUG) log.i(TAG, "PictureLoader");
         urls = new ArrayList<>();
@@ -57,9 +66,11 @@ public class PictureLoader {
      * @param imageView 要显示的ImageView
      */
     public void displayImage(String urlStr, ImageView imageView) {
-        displayImageByPriority(urlStr, imageView, 0);
+        displayImageByPriority(urlStr, imageView, 0,null);
     }
-
+    public void displayImageWithCallback(String urlStr, ImageView imageView,PictureLoaderListener loaderListener) {
+        displayImageByPriority(urlStr, imageView, 0,loaderListener);
+    }
     /**
      * 按优先级来下载网络资源图片
      *
@@ -67,8 +78,12 @@ public class PictureLoader {
      * @param imageView 要显示的ImageView
      * @param priority  下载优先级
      */
-    public void displayImageByPriority(final String urlStr, final ImageView imageView, int priority) {
-        imageView.setImageResource(R.drawable.load_before);
+    public void displayImageByPriority(final String urlStr, final ImageView imageView, int priority, final PictureLoaderListener loaderListener) {
+        if (loaderListener != null)
+            loaderListener.onLoadingStarted(urlStr,imageView);
+        else
+            imageView.setImageResource(R.drawable.load_before);
+
         if (mImageCaches.containsKey(urlStr)) {
             SoftReference<Bitmap> bitmapSoftReference = mImageCaches.get(urlStr);
             Bitmap bitmap = bitmapSoftReference.get();
@@ -77,42 +92,10 @@ public class PictureLoader {
                 return;
             }
         }
+
         if (!urls.contains(urlStr)) {
             if (DEBUG) log.i(TAG, "displayImage\turlStr\t" + urlStr);
-            priorityThreadPool.execute(new PriorityRunnable(priority, imageView) {
-                @Override
-                public Bitmap loadPicture() {
-                    URL url;
-                    HttpURLConnection urlConnection = null;
-                    Bitmap bitmap = null;
-                    try {
-                        url = new URL(urlStr);
-                        urlConnection = (HttpURLConnection) url.openConnection();
-                        urlConnection.setRequestMethod("GET");
-                        urlConnection.setDoInput(true);
-                        urlConnection.connect();
-                        InputStream inputStream = urlConnection.getInputStream();
-                        BitmapFactory.Options opts = new BitmapFactory.Options();
-                        opts.inSampleSize = 2;
-                        bitmap = decodeBitmapWithStream(inputStream, imageView.getWidth(), imageView.getHeight());
-//                        bitmap = BitmapFactory.decodeStream(inputStream, new Rect(-1,-1,-1,-1), opts);
-                        inputStream.close();
-
-                        if (bitmap != null) {
-                            saveImage(bitmap, urlStr);
-                            mImageCaches.put(urlStr, new SoftReference<Bitmap>(bitmap));
-                        }
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } finally {
-                        if (urlConnection != null) {
-                            urlConnection.disconnect();
-                        }
-                    }
-                    return bitmap;
-                }
-            });
+            loadImage(urlStr, imageView, priority, loaderListener);
             urls.add(urlStr);
         } else {
             if (DEBUG)
@@ -129,6 +112,49 @@ public class PictureLoader {
             }
         }
 
+    }
+
+    public void loadImage(final String urlStr, final ImageView imageView, final int priority, final PictureLoaderListener loaderListener) {
+        if (priorityThreadPool == null){
+            if (DEBUG) log.i(TAG,"ExecutorService is null");
+            return;
+        }
+        priorityThreadPool.execute(new PriorityRunnable(priority, imageView) {
+            @Override
+            public Bitmap loadPicture() {
+                URL url ;
+                HttpURLConnection urlConnection = null;
+                Bitmap bitmap = null;
+                try {
+                    url = new URL(urlStr);
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setDoInput(true);
+                    urlConnection.connect();
+                    InputStream inputStream = urlConnection.getInputStream();
+                    bitmap = decodeBitmapWithStream(inputStream, imageView.getWidth(), imageView.getHeight());
+                    inputStream.close();
+
+                    if (bitmap != null) {
+                        if (loaderListener != null)
+                            loaderListener.onLoadingComplete(urlStr,imageView,bitmap);
+
+                        saveImage(bitmap, urlStr);
+                        mImageCaches.put(urlStr, new SoftReference<>(bitmap));
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    if (loaderListener != null)
+                        loaderListener.onLoadingFailed(urlStr,imageView,e.getMessage());
+                } finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+                }
+                return bitmap;
+            }
+        });
     }
 
     private Bitmap decodeBitmapWithUrl(String path, int width, int height) throws IOException {
@@ -244,8 +270,7 @@ public class PictureLoader {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                for (File f :
-                        childFiles) {
+                for (File f : childFiles) {
                     f.delete();
                 }
             }
